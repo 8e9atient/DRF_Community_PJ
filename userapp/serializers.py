@@ -1,3 +1,4 @@
+from django.contrib.auth import authenticate
 from django.contrib.auth.models import User
 from django.contrib.auth.password_validation import validate_password
 
@@ -44,3 +45,19 @@ class RegisterSerializer(serializers.ModelSerializer):
         token = Token.objects.create(user=user)
 
         return user
+
+
+class LoginSerializer(serializers.Serializer):
+    username = serializers.CharField(required=True)
+    password = serializers.CharField(required=True, write_only=True)
+
+    def validate(self, attrs):
+        user = authenticate(**attrs)
+
+        if user:
+            token = Token.objects.get(user=user)
+
+            return token
+        raise serializers.ValidationError(
+            {"error": "아이디 또는 비밀번호를 잘못 입력하셨습니다."}
+        )
